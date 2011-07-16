@@ -7,8 +7,9 @@ This plugin lets you store a graph representation of your data in
 Redis. ("Graph" as in "Graph Theory", this is NOT charting sofrtware.)
 
 A graph representation of your objects is a very powerful analytical
-tool for discovering inter-boject relationships that cannot be done
-easily using a relational database. 
+tool for discovering inter-object relationships that cannot be
+discovered easily or nearly as efficiently using a relational
+database.
 
 
 Example
