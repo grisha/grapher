@@ -5,11 +5,11 @@ module Graph
   end
 
   class GraphDirective
-    def initialize(name, options)
-      @name, @options = name, options
+    def initialize(from, options)
+      @from, @options = from, options
     end
-    def name
-      @name
+    def from
+      @from
     end
     def options
       @options
@@ -20,13 +20,13 @@ module Graph
 
     mattr_accessor :valid_keys_for_graph_edge_from
     @@valid_keys_for_graph_edge_from = [:to, :verb, :on, :if, :unless]
-    def graph_edge_from(name, options={})
+    def graph_edge_from(from, options={})
       options.assert_valid_keys(valid_keys_for_graph_edge_from)
 
       options[:to] = self.class.name.underscore.to_sym unless options[:to]
       options[:on] = :save unless options[:on]
 
-      directive = GraphDirective.new(name, options)
+      directive = GraphDirective.new(from, options)
       write_inheritable_array(:graph_directives, [directive])
 
       include_graph_instance_methods do
@@ -58,9 +58,14 @@ module Graph
 
         if should_method_run?(directive.options, self)
 
-          from_obj_class, from_obj_val = obj_parts(self.instance_eval(directive.name.to_s))
-          to_obj_class, to_obj_val = obj_parts(self.instance_eval(directive.options[:to].to_s))
+          from = directive.from.is_a?(Proc) ? evaluate_method(directive.from, self) : instance_eval(directive.from.to_s)
+          from_obj_class, from_obj_val = obj_parts(from)
+
+          to = directive.options[:to].is_a?(Proc) ? evaluate_method(directive.options[:to], self) : instance_eval(directive.options[:to].to_s)
+          to_obj_class, to_obj_val = obj_parts(to)
+
           verb = directive.options[:verb] || "#{self.class.name}"
+          verb = evaluate_method(verb, self) if verb.is_a? Proc
 
           # forward
           key = "#{from_obj_class}:#{from_obj_val}:>#{verb}"
