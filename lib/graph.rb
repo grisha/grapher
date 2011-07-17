@@ -140,7 +140,49 @@ module Graph
 
   module GraphNodeInstanceMethods
 
+    # somehow this little function needs to take distance as an
+    # argument, and it should default to 1
+
     def graph_neighbors(*args)
+      verbs, distance = graph_check_args(*args)
+
+      result = Set.new
+      verbs.each do |verb|
+        current_distance = Set.new(["#{self.class.name}:#{self.id}"])
+        distance.times do
+          current_distance.each { |node| result.merge($redis.smembers("#{node}:#{verb}")) }
+          verb = verb[0,1] == '>' ? '<'+verb[1..-1] : '>'+verb[1..-1] # flip direction
+          current_distance.replace(result)
+        end
+      end
+      result
+    end
+
+    def graph_neighbors_ranked(*args)
+      verbs, distance = graph_check_args(*args)
+
+      result = {}
+      verbs.each do |verb|
+        current_distance = Set.new(["#{self.class.name}:#{self.id}"])
+        distance.times do
+          current_distance.each do |node|
+            $redis.smembers("#{node}:#{verb}").each do |node2|
+              result[node2] = (result[node2] || 0) + 1
+            end
+          end
+          verb = verb[0,1] == '>' ? '<'+verb[1..-1] : '>'+verb[1..-1] # flip direction
+          current_distance.replace(result.keys)
+        end
+      end
+      result = Array(result).map {|k,v| [v,k]}
+      result.sort.reverse
+    end
+
+    private
+
+    def graph_check_args(*args)
+      options = args.extract_options!
+      options.assert_valid_keys([:distance])
       if args.present?
         verbs = Set.new(args.flatten)
       else
@@ -149,11 +191,13 @@ module Graph
           verbs.merge(directive.options[:verbs])
         end
       end
-      result = Set.new
       verbs.each do |verb|
-        result.merge($redis.smembers("#{self.class.name}:#{self.id}:#{verb}"))
+        unless ['<','>'].include? verb[0,1]
+          raise ArgumentError, "Verb '#{verb}' does not begin with '>' or '<'"
+        end
       end
-      result
+      distance = options[:distance] || 1
+      return [verbs, distance]
     end
 
   end
