@@ -12,11 +12,106 @@ discovered easily or nearly as efficiently using a relational
 database.
 
 
+Introduction
+============
+
+Imagine the following model:
+
+User
+  has_many :orders
+
+Order
+  has_many :items, :through => order_items
+  belongs_to :user
+
+Order_Item
+  has_one :item, :polymorphic => true
+  belongs_to: order
+
+
+Imagine that you would like to keep track of a user buying an
+item. You can get a user's orders via user.orders, the for each of
+those collect the items. So it's possible, but it's not a one-step
+operation.
+
+Imagine that you wanted to compare what a user has purchased with what
+other users have purchased, so that you could make a recommendation
+such as "users who purchased X also purchased Y". Given the above
+database structure it would be a pretty complicated operation.
+
+(Bear with us, we're getting to the point.)
+
+Now imagine that you stored a user's purchases in a graph, like this
+(numbers are users, letters are items):
+
++---> D <---+
+|           |
+1 --> A <-- 2 --> B
+      ^
+      |
+      3 --> C <-- 4
+
+In the above graph:
+
+user 1 purchased [A, D]
+user 2 purchased [A, B, D]
+user 3 purchased [A, C]
+user 4 purchased [C]
+
+You can see that users 1 and 2 both purchased items A and D. Based on
+this you could say that users 1 and 2 have similar purchasing pattern,
+and that item B may be of interest to user 1. You could also say that
+items A and D may be related because more than one user purchased them
+together.
+
+You may have noticed that users 1 and 2 are two graph edges away from
+each other. Also that there are multiple paths connecting users 1 and
+2 (via A and via D).
+
+This means that to find users with similar purchasing pattern, all we
+need to do is to enumerate all users exactly two "hops" away. And if
+we were to count the number of time we come across the same user, this
+count would become a rank of similarity - the higher the rank, the
+more similar these users are.
+
+Same principle applies to items. Items two edges apart can be deemed
+similar, and the more common paths, the higher the degree of
+similarity.
+
+If we were to store the above graph as a two hashes of sets (one for
+forward links from user to item, the second for reverse from item to
+user), such as (in pseudo-ruby code):
+
+forward = { 1 => {A, D},
+            2 => {A, B, D},
+            3 => {A, C},
+            4 => {C} }
+
+reverse = { A => {1, 2, 3},
+            B => {2},
+            C => {3, 4},
+            D => {1, 2} }
+
+we could quite easily accomplish the above operation. For example, all
+users similar to 1 are:
+
+forward[1].each { |item| reverse[item] }
+
+Similarly items similar to A would be:
+
+reverse[A].each { |user| forward[user] }
+
+There is only one remaining problem - if your database is any decent
+size by todays standards, building these hashes may take enough
+CPU/memory to make it impractical. 
+
+This is where Redis comes in. We can build this structure once and
+maintain it with proper callbacks and keep it stored in Redis. Redis
+provides all the basic operations for the above calculations and is
+fast enough for these calculations to be performed real-time.
+
 Example
 =======
-
-Example goes here.
-
 
 Copyright (c) 2011 Tournesol Ventures, LLC
 
