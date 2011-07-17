@@ -4,7 +4,7 @@ module Graph
     base.extend ClassMethods
   end
 
-  class GraphDirective
+  class GraphEdgeFromDirective
     def initialize(from, options)
       @from, @options = from, options
     end
@@ -16,20 +16,27 @@ module Graph
     end
   end
 
+  class GraphNodeDirective
+    def initialize(options)
+      @options = options
+    end
+    def options
+      @options
+    end
+  end
+
   module ClassMethods
 
-    mattr_accessor :valid_keys_for_graph_edge_from
-    @@valid_keys_for_graph_edge_from = [:to, :verb, :on, :if, :unless]
     def graph_edge_from(from, options={})
-      options.assert_valid_keys(valid_keys_for_graph_edge_from)
+      options.assert_valid_keys([:to, :verb, :on, :if, :unless])
 
       options[:to] = self.class.name.underscore.to_sym unless options[:to]
       options[:on] = :save unless options[:on]
 
-      directive = GraphDirective.new(from, options)
-      write_inheritable_array(:graph_directives, [directive])
+      directive = GraphEdgeFromDirective.new(from, options)
+      write_inheritable_array(:graph_edge_from_directives, [directive])
 
-      include_graph_instance_methods do
+      include_graph_edge_from_instance_methods do
         case options[:on]
         when :save   then after_save :store_graph_edge
         when :create then after_create :store_graph_edge
@@ -38,23 +45,39 @@ module Graph
       end
     end
 
+    def graph_node(options={})
+      options.assert_valid_keys([:verbs])
+
+      directive = GraphNodeDirective.new(options)
+      write_inheritable_array(:graph_node_directives, [directive])
+
+      include_graph_node_instance_methods
+    end
+
     private
 
-    def include_graph_instance_methods(&block)
-      unless included_modules.include? InstanceMethods
+    def include_graph_edge_from_instance_methods(&block)
+      unless included_modules.include? GraphEdgeFromInstanceMethods
         yield if block_given?
-        include InstanceMethods
+        include GraphEdgeFromInstanceMethods
+      end
+    end
+
+    def include_graph_node_instance_methods(&block)
+      unless included_modules.include? GraphNodeInstanceMethods
+        yield if block_given?
+        include GraphNodeInstanceMethods
       end
     end
 
   end
 
-  module InstanceMethods
+  module GraphEdgeFromInstanceMethods
 
     private
 
     def store_graph_edge
-      self.class.read_inheritable_attribute(:graph_directives).each do |directive|
+      self.class.read_inheritable_attribute(:graph_edge_from_directives).each do |directive|
 
         if should_method_run?(directive.options, self)
 
@@ -113,6 +136,25 @@ module Graph
         ![options[:unless]].flatten.compact.any? { |a| evaluate_method(a, *args) }
     end
 
+  end
+
+  module GraphNodeInstanceMethods
+
+    def graph_neighbors(*args)
+      if args.present?
+        verbs = Set.new(args.flatten)
+      else
+        verbs = Set.new
+        self.class.read_inheritable_attribute(:graph_node_directives).each do |directive|
+          verbs.merge(directive.options[:verbs])
+        end
+      end
+      result = Set.new
+      verbs.each do |verb|
+        result.merge($redis.smembers("#{self.class.name}:#{self.id}:#{verb}"))
+      end
+      result
+    end
 
   end
 end
