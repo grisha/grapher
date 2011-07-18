@@ -56,8 +56,8 @@ module Graph
     #   :save (default), :create or :update. When the edge is actually
     #   created.
     # [:if, :unless]
-    #    Method, proc or string to call to determin if the edge should
-    #    be stored.
+    #    Method, proc or string to call to determine whether the edge
+    #    should be stored.
     #
     # === Example
     #

@@ -31,14 +31,14 @@ OrderItem
   has_one :user, :through => :order
 
 Imagine that you would like to keep track of a user buying an
-item. You can get a user's orders via user.orders, the for each of
-those collect the items. So it's possible, but it's not a one-step
-operation.
+item. You can get a user's orders via user.orders, then for each of
+those collect the items. So it's possible, but not in one step.
 
 Imagine that you wanted to compare what a user has purchased with what
 other users have purchased, so that you could make a recommendation
 such as "users who purchased X also purchased Y". Given the above
-database structure it would be a pretty complicated operation.
+database structure it would be a fairly complicated operation
+requiring numerous SQL calls.
 
 (Bear with us, we're getting to the point.)
 
@@ -60,20 +60,20 @@ user 3 purchased [A, C]
 user 4 purchased [C]
 
 You can see that users 1 and 2 both purchased items A and D. Based on
-this you could say that users 1 and 2 have similar purchasing pattern,
-and that item B may be of interest to user 1. You could also say that
-items A and D may be related because more than one user purchased them
-together.
+this you could say that users 1 and 2 have a similar purchasing
+pattern, and that item B may be of interest to user 1. You could also
+say that items A and D may be related because more than one user
+purchased them together.
 
 You may have noticed that users 1 and 2 are two graph edges away from
 each other. Also that there are multiple paths connecting users 1 and
 2 (via A and via D).
 
-This means that to find users with similar purchasing pattern, all we
-need to do is to enumerate all users exactly two "hops" away. And if
-we were to count the number of time we come across the same user, this
-count would become a rank of similarity - the higher the rank, the
-more similar these users are.
+This means that to find users with a similar purchasing pattern, all
+we need to do is to enumerate all users exactly two "hops" away. And
+if we were to count the number of time we come across the same user,
+this count would become a rank of similarity - the higher the rank,
+the more similar these users are.
 
 Same principle applies to items. Items two edges apart can be deemed
 similar, and the more common paths, the higher the degree of
