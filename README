@@ -21,13 +21,13 @@ User
   has_many :orders
 
 Order
-  has_many :items, :through => order_items
   belongs_to :user
+  has_many :items, :through => order_items
 
 OrderItem
-  has_one :item, :polymorphic => true
-  belongs_to: order
-
+  belongs_to :order
+  belongs_to :item, :polymorphic => true
+  has_one :user, :through => :order
 
 Imagine that you would like to keep track of a user buying an
 item. You can get a user's orders via user.orders, the for each of
@@ -112,6 +112,26 @@ fast enough for these calculations to be performed real-time.
 
 Example
 =======
+
+class OrderItem < ActiveRecord::Base
+  belongs_to :order
+  belongs_to :item, :polymorphic => true
+  has_one :user, :through => :order
+  graph_edge_from :user, :to => :item, :on => :create, :verb => 'Purchased'
+  ...
+
+class User < ActiveRecord::Base
+  has_many :orders
+  graph_node :verbs => '>Purchased'
+
+>> u = User.find(:first)
+>> u.graph_neighbors
+=> #<Set: {"Item:234", "Item:345", "Item:456"}>
+>> u.graph_neighbors(:distance => 2)
+=> #<Set: {"User:12", "User:23", "User:2345"}>
+>> u.graph_neighbors_ranked(:distance => 2)
+=> [[9, "User:23"], [5, "User:23"], [1, "User:2345"]]
+
 
 Copyright (c) 2011 Tournesol Ventures, LLC
 

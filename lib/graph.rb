@@ -48,7 +48,10 @@ module Graph
     #   edge. Defaults to the current object.
     # [:verb]
     #   Method, proc or string to call to get the name of the
-    #   verb. Defaults to current object's class name.
+    #   verb. Defaults to current object's class name. Note that
+    #   internally all verbs are prepended with a '>' or '<'
+    #   indicating direction, e.g. User:123:>Purchased => Item:345,
+    #   Item:345:<Purchased => User:123.
     # [:on]
     #   :save (default), :create or :update. When the edge is actually
     #   created.
