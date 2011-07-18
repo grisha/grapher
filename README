@@ -1,8 +1,6 @@
 Grapher
 =======
 
-THIS IS PRE-ALPHA SOFTWARE. DON'T TRY THIS QUITE YET.
-
 This plugin lets you store a graph representation of your data in
 Redis. ("Graph" as in "Graph Theory", this is NOT charting sofrtware.)
 
