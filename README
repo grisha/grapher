@@ -103,11 +103,11 @@ Similarly items similar to A would be:
 reverse[A].each { |user| forward[user] }
 
 There is only one remaining problem - if your database is any decent
-size by todays standards, building these hashes may take enough
+size by today's standards, building these hashes may take enough
 CPU/memory to make it impractical. 
 
 This is where Redis comes in. We can build this structure once and
-maintain it with proper callbacks and keep it stored in Redis. Redis
+maintain it with proper callbacks, having it stored in Redis. Redis
 provides all the basic operations for the above calculations and is
 fast enough for these calculations to be performed real-time.
 
