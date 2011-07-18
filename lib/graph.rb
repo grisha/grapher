@@ -195,6 +195,7 @@ module Graph
       verbs.each do |verb|
         current_distance = Set.new(["#{self.class.name}:#{self.id}"])
         distance.times do
+          result.clear
           current_distance.each { |node| result.merge($redis.smembers("#{node}:#{verb}")) }
           verb = verb[0,1] == '>' ? '<'+verb[1..-1] : '>'+verb[1..-1] # flip direction
           current_distance.replace(result)
@@ -210,6 +211,7 @@ module Graph
       verbs.each do |verb|
         current_distance = Set.new(["#{self.class.name}:#{self.id}"])
         distance.times do
+          result.clear
           current_distance.each do |node|
             $redis.smembers("#{node}:#{verb}").each do |node2|
               result[node2] = (result[node2] || 0) + 1

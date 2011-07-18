@@ -11,6 +11,7 @@ tool for discovering inter-object relationships that cannot be
 discovered easily or nearly as efficiently using a relational
 database.
 
+For more info on Redis see http://redis.io/
 
 Introduction
 ============
