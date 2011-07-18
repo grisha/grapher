@@ -27,6 +27,48 @@ module Graph
 
   module ClassMethods
 
+    # Describes a graph edge which is created by this model.  A graph
+    # edge consists of a start node (:from), a verb and an end node
+    # (:to). Conceptually it represents a subject-verb-object,
+    # e.g. "User X purchased Item Y." where starting node is User X,
+    # verb is "purchased" and end node is Item Y.
+    #
+    # A node can be an ActiveRecord object or a string. A verb is
+    # always a string.
+    #
+    # The first argument is a method name for the starting node
+    # (typically this is an assciation). The end node (:to) will
+    # default to the ActiveRecord object where the directive is
+    # specified. :verb defaults to the name of the class of the
+    # current object.
+    #
+    # === Options
+    # [:to]
+    #   Method, proc or string to call to get the end node of this
+    #   edge. Defaults to the current object.
+    # [:verb]
+    #   Method, proc or string to call to get the name of the
+    #   verb. Defaults to current object's class name.
+    # [:on]
+    #   :save (default), :create or :update. When the edge is actually
+    #   created.
+    # [:if, :unless]
+    #    Method, proc or string to call to determin if the edge should
+    #    be stored.
+    #
+    # === Example
+    #
+    # User
+    #   has_many :orders
+    # Order
+    #   belongs_to :user
+    #   has_many :items, :through => :order_items
+    # OrderItem
+    #   belongs_to :order
+    #   has_one :user, :through => :order
+    #   has_one :item
+    #   graph_edge_from :user, :to => :item, :verb => 'Purchased', :on => :create
+
     def graph_edge_from(from, options={})
       options.assert_valid_keys([:to, :verb, :on, :if, :unless])
 

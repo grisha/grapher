@@ -24,7 +24,7 @@ Order
   has_many :items, :through => order_items
   belongs_to :user
 
-Order_Item
+OrderItem
   has_one :item, :polymorphic => true
   belongs_to: order
 
