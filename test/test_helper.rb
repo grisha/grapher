@@ -10,9 +10,11 @@ require 'active_support'
 require 'active_support/test_case'
 
 class Item < ActiveRecord::Base
+  graph_node :verbs => ['<Purchased']
 end
 
 class User < ActiveRecord::Base
+  graph_node :verbs => ['>Purchased']
   has_many :rders
 end
 
@@ -27,7 +29,6 @@ class OrderItem < ActiveRecord::Base
   has_one :user, :through => :order
   graph_edge_from :user, :to => :item, :verb => 'Purchased'
 end
-
 
 def load_schema
   config = YAML::load(IO.read(File.dirname(__FILE__) + '/database.yml'))
