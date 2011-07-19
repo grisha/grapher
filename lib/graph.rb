@@ -205,9 +205,6 @@ module Graph
 
   module GraphNodeInstanceMethods
 
-    # somehow this little function needs to take distance as an
-    # argument, and it should default to 1
-
     def graph_neighbors(*args)
       verbs, distance = graph_check_args(*args)
 
