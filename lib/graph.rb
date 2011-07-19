@@ -37,7 +37,7 @@ module Graph
     # always a string.
     #
     # The first argument is a method name for the starting node
-    # (typically this is an assciation). The end node (:to) will
+    # (typically this is an association). The end node (:to) will
     # default to the ActiveRecord object where the directive is
     # specified. :verb defaults to the name of the class of the
     # current object.
@@ -78,15 +78,15 @@ module Graph
       options[:to] = self.class.name.underscore.to_sym unless options[:to]
       options[:on] = :save unless options[:on]
 
+      unless [:create, :update, :save].include?(options[:on])
+        raise ArgumentError, ":on must be :save, :create or :update"
+      end
+
       directive = GraphEdgeFromDirective.new(from, options)
       write_inheritable_array(:graph_edge_from_directives, [directive])
 
       include_graph_edge_from_instance_methods do
-        case options[:on]
-        when :save   then after_save :store_graph_edge
-        when :create then after_create :store_graph_edge
-        when :update then after_update :store_graph_edge
-        end
+        after_save :store_graph_edge
       end
     end
 
@@ -138,8 +138,6 @@ module Graph
 
   module GraphEdgeFromInstanceMethods
 
-    private
-
     def store_graph_edge
       self.class.read_inheritable_attribute(:graph_edge_from_directives).each do |directive|
 
@@ -170,6 +168,8 @@ module Graph
       end
     end
 
+    private
+
     def obj_parts(obj)
       # it's either an AR object or a String
       [obj.class.name, obj.is_a?(ActiveRecord::Base) ? obj.id : obj.to_s]
@@ -196,6 +196,7 @@ module Graph
     end
 
     def should_method_run?(options, *args)
+      return false if options[:on] == :create && !self.new_record?
       [options[:if]].flatten.compact.all? { |a| evaluate_method(a, *args) } &&
         ![options[:unless]].flatten.compact.any? { |a| evaluate_method(a, *args) }
     end
