@@ -90,6 +90,25 @@ module Graph
       end
     end
 
+    # A graph node is an object whose id is stored in a graph as a
+    # result of a graph_edge_from directive. A graph node will have
+    # methods to do things with the graph such as find neighbors.
+    #
+    # === Options
+    # [:verbs]
+    # An array of verbs that edges connecting this node would
+    # have. This is necessary because we do not maintain a global list
+    # of verbs, the verbs have to be explicitely named. NOTE that
+    # verbs here must specify direction in the first character, '>' or
+    # '<'.
+    #
+    # === Example
+    # class User < ActiveRecord::Base
+    #   graph_node :verbs => '>Purchased'
+    #    ...
+    # class Item < ActiveRecord::Base
+    #   graph_node :verbs => '<Purchased'
+
     def graph_node(options={})
       options.assert_valid_keys([:verbs])
 
